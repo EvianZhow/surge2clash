@@ -65,11 +65,11 @@ function surge2Clash(surgeConfText, query) {
           proxyConf.tls = true;
         }
 
-        if (proxy[i++]) {
+        if (proxy[i]) {
           proxyConf.username = proxy[i++];
         }
 
-        if (proxy[i++]) {
+        if (proxy[i]) {
           proxyConf.password = proxy[i++];
         }
 
@@ -84,9 +84,9 @@ function surge2Clash(surgeConfText, query) {
         }
 
         if (query.win) {
-          proxy.push(proxyConf);
+          proxys.push(proxyConf);
         } else {
-          proxy.push(JSON.stringify(proxyConf));
+          proxys.push(JSON.stringify(proxyConf));
         }
 
         break;
@@ -105,11 +105,11 @@ function surge2Clash(surgeConfText, query) {
           proxyConf.tls = true;
         }
 
-        if (proxy[i++]) {
+        if (proxy[i]) {
           proxyConf.username = proxy[i++];
         }
 
-        if (proxy[i++]) {
+        if (proxy[i]) {
           proxyConf.password = proxy[i++];
         }
 
@@ -124,9 +124,9 @@ function surge2Clash(surgeConfText, query) {
         }
 
         if (query.win) {
-          proxy.push(proxyConf);
+          proxys.push(proxyConf);
         } else {
-          proxy.push(JSON.stringify(proxyConf));
+          proxys.push(JSON.stringify(proxyConf));
         }
     }
   }
