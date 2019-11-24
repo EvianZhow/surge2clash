@@ -1,8 +1,11 @@
 /* eslint no-fallthrough: 0 */
-const ini = require('ini');
+const ini = require('js-ini');
 const jsYaml = require('js-yaml');
 
-const clashConf = {
+const splitByCommas = string => (string || "").split(/,\s*/).map(e => e.trim());
+const isTrue = value => typeof value === 'boolean' ? value : value == 'true';
+
+const defaultClashConf = {
   port: 7890,
   'socks-port': 1080,
   'redir-port':7892,
@@ -11,28 +14,14 @@ const clashConf = {
   'log-level': 'info',
   'external-controller': '127.0.0.1:9090',
   secret: ''
+}
 
-};
+const clashConf = Object.assign({}, defaultClashConf);
 
-// eslint-disable-next-line complexity
-function surge2Clash(surgeConfText, query) {
-  const surgeConf = ini.parse(surgeConfText);
-
-  const dns = {
-    enable: !!query.dns,
-    listen: '0.0.0.0:53',
-    fallback: '8.8.8.8'
-  };
-
-  dns.nameserver = surgeConf.General['dns-server'].split(/,\s+/).filter(i => i.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/) || i.match(/^\w+:\/\//));
-  dns.ipv6 = surgeConf.General.ipv6 || false;
-  if(!query.win) {
-    clashConf.dns = dns;
-  }
+function parseProxy(surgeConf, options = {}) {
   const proxys = [];
-
   for (const name of Object.keys(surgeConf.Proxy)) {
-    const proxy = surgeConf.Proxy[name].split(/,\s*/);
+    const proxy = splitByCommas(surgeConf.Proxy[name]);
     let tls = false;
     let proxyConf;
     let protocol;
@@ -83,7 +72,7 @@ function surge2Clash(surgeConfText, query) {
           }
         }
 
-        if (query.win) {
+        if (options.win) {
           proxys.push(proxyConf);
         } else {
           proxys.push(JSON.stringify(proxyConf));
@@ -123,24 +112,31 @@ function surge2Clash(surgeConfText, query) {
           }
         }
 
-        if (query.win) {
+        if (options.win) {
           proxys.push(proxyConf);
         } else {
           proxys.push(JSON.stringify(proxyConf));
         }
     }
   }
+  return proxys;
+}
 
+function parseProxyGroup(surgeConf, option = {}) {
   const proxyGroups = [];
+  const reservedKeywords = ['DIRECT'];
+  
   for (const name of Object.keys(surgeConf['Proxy Group'])) {
-    const group = surgeConf['Proxy Group'][name].split(/,\s*/);
+    const group = splitByCommas(surgeConf['Proxy Group'][name]);
     const each = {
       name,
       type: group[0]
     };
     const proxies = [];
     for (let i = 1; i < group.length; i++) {
-      if (Object.keys(surgeConf.Proxy).includes(group[i])) {
+      if (Object.keys(surgeConf.Proxy).includes(group[i]) || // ref from proxy section
+        reservedKeywords.includes(group[i]) || // ref from reserved keywords
+        Object.keys(surgeConf['Proxy Group']).includes(group[i])) { // ref from previous proxy group
         proxies.push(group[i]);
       } else if (group[i].indexOf('=') !== -1) {
         const [key, val] = group[i].split(/\s*=\s*/);
@@ -151,14 +147,46 @@ function surge2Clash(surgeConfText, query) {
     each.proxies = proxies;
     proxyGroups.push(each);
   }
+  return proxyGroups;
+}
+
+// eslint-disable-next-line complexity
+function surge2Clash(surgeConfText, query) {
+  const surgeConf = ini.parse(surgeConfText, {
+    comment: '#',
+    autoTyping: false,
+    dataSections: ['Rule', 'URL Rewrite', 'Header Rewrite', 'SSID Setting'],
+  });
+
+  const dns = {
+    enable: !!query.dns,
+    listen: '0.0.0.0:53',
+    fallback: '8.8.8.8'
+  };
+
+  dns.nameserver = surgeConf.General['dns-server'].split(/,\s+/).filter(i => i.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/) || i.match(/^\w+:\/\//));
+  dns.ipv6 = isTrue(surgeConf.General.ipv6);
+  if(!query.win) {
+    clashConf.dns = dns;
+  }
+
+  const proxys = parseProxy(surgeConf, query) || [];
+  const proxyGroups = parseProxyGroup(surgeConf, query) || [];
 
   clashConf.Proxy = proxys;
   clashConf['Proxy Group'] = proxyGroups;
-  clashConf.Rule = Object.keys(surgeConf.Rule).map(i => {
-    return i.replace(/no-resolve|,\s*no-resolve|,\s*force-remote-dns|force-remote-dns/, '');
+
+  clashConf.Rule = (surgeConf.Rule || []).map(i => {
+    // remove unsupported keywords
+    return i.replace(/no-resolve|,\s*no-resolve|,\s*force-remote-dns|force-remote-dns|dns-failed|,\s*dns-failed/, '');
+  }).map(i => {
+    // remove inline comments
+    return i.replace(/\s*\/\/[^;)]*$/, '');
   }).filter(i => !i.startsWith('USER-AGENT') && !i.startsWith('PROCESS-NAME'));
+
   delete query.win;
   delete query.url;
+
   if (query.port) {
     query.port = parseInt(query.port, 10);
   }
