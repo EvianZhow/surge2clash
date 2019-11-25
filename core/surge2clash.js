@@ -7,13 +7,30 @@ const isTrue = value => typeof value === 'boolean' ? value : value == 'true';
 
 const defaultClashConf = {
   port: 7890,
-  'socks-port': 1080,
+  'socks-port': 7891,
   'redir-port':7892,
   'allow-lan': true,
   mode: 'Rule',
   'log-level': 'info',
   'external-controller': '127.0.0.1:9090',
   secret: ''
+}
+
+const defaultDNSConf = { 
+  enable: true,
+  ipv6: false,
+  listen: '0.0.0.0:53',
+  'enhanced-mode': 'fake-ip',
+  nameserver:  [ 
+    '119.28.28.28',
+    '119.29.29.29',
+    '223.5.5.5',
+    'tls://dns.rubyfish.cn:853' 
+  ],
+  fallback: [ 
+    'tls://1.0.0.1:853', 
+    'tls://8.8.4.4:853' 
+  ] 
 }
 
 const clashConf = Object.assign({}, defaultClashConf);
@@ -26,18 +43,14 @@ function surge2Clash(surgeConfText, query) {
     dataSections: ['Rule', 'URL Rewrite', 'Header Rewrite', 'SSID Setting'],
   });
 
-  const dns = {
-    enable: !!query.dns,
-    listen: '0.0.0.0:53',
-    fallback: '8.8.8.8'
-  };
+  const dns = Object.assign({}, defaultDNSConf, {
+    enable: !!query.win,
+    nameserver: surgeConf.General['dns-server'].split(/,\s+/).filter(i => i.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/) || i.match(/^\w+:\/\//)),
+    ipv6: isTrue(surgeConf.General.ipv6)
+  });
 
-  dns.nameserver = surgeConf.General['dns-server'].split(/,\s+/).filter(i => i.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/) || i.match(/^\w+:\/\//));
-  dns.ipv6 = isTrue(surgeConf.General.ipv6);
-  if (!query.win) {
-    clashConf.dns = dns;
-  }
-
+  clashConf.dns = dns;
+  
   const proxys = parseProxy(surgeConf, { stringify: !!query.win }) || [];
   const proxyGroups = parseProxyGroup(surgeConf, { stringify: !!query.win }) || [];
 
