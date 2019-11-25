@@ -1,4 +1,4 @@
-const splitByCommas = string => (string || "").split(/,\s*/).map(e => e.trim());
+const splitByCommas = string => (string || '').split(/,\s*/).map(e => e.trim());
 
 function parseHTTPProxyLine(name, confLine, option = {}) {
   let i = 1;
@@ -23,7 +23,7 @@ function parseHTTPProxyLine(name, confLine, option = {}) {
   }
 
   if (params.length > i) {
-    for (let { length } = params; i < length; i++) {
+    for (let {length} = params; i < length; i++) {
       const [key, value] = params[i].split('=');
       // eslint-disable-next-line max-depth
       if (key === 'skip-cert-verify') {
@@ -40,7 +40,7 @@ function parseSOCKSProxyLine(name, confLine, option = {}) {
   const params = splitByCommas(confLine);
   protocol = 'socks5';
 
-  proxyConf = {
+  const proxyConf = {
     name,
     type: protocol,
     server: params[i++],
@@ -59,7 +59,7 @@ function parseSOCKSProxyLine(name, confLine, option = {}) {
   }
 
   if (params.length > i) {
-    for (let { length } = params; i < length; i++) {
+    for (let {length} = params; i < length; i++) {
       const [key, value] = params[i].split('=');
       // eslint-disable-next-line max-depth
       if (key === 'skip-cert-verify') {
@@ -82,7 +82,7 @@ function parseCustomProxyLine(name, confLine, option = {}) {
     port: parseInt(params[i++], 10),
     cipher: params[i++],
     password: params[i++]
-  }
+  };
 }
 
 function parseProxy(surgeConf, options = {}) {
@@ -90,7 +90,7 @@ function parseProxy(surgeConf, options = {}) {
   Object.keys(surgeConf.Proxy).map(k => {
     const e = surgeConf.Proxy[k];
     let proxyConf;
-    let option = {};
+    const option = {};
     switch (splitByCommas(e)[0]) {
       case 'custom':
         proxyConf = parseCustomProxyLine(k, e);
@@ -106,20 +106,21 @@ function parseProxy(surgeConf, options = {}) {
         proxyConf = parseSOCKSProxyLine(k, e, option);
         break;
     }
+
     if (options.stringify) {
       proxys.push(proxyConf);
     } else {
       proxys.push(JSON.stringify(proxyConf));
     }
-  })
-  
+  });
+
   return proxys;
 }
 
 function parseProxyGroup(surgeConf, option = {}) {
   const proxyGroups = [];
   const reservedKeywords = ['DIRECT'];
-  
+
   for (const name of Object.keys(surgeConf['Proxy Group'])) {
     const group = splitByCommas(surgeConf['Proxy Group'][name]);
     const each = {
@@ -133,11 +134,11 @@ function parseProxyGroup(surgeConf, option = {}) {
 
     const proxies = [];
     for (let i = 1; i < group.length; i++) {
-      if (Object.keys(surgeConf.Proxy).includes(group[i]) || // ref from proxy section
-        reservedKeywords.includes(group[i]) || // ref from reserved keywords
-        Object.keys(surgeConf['Proxy Group']).includes(group[i])) { // ref from previous proxy group
+      if (Object.keys(surgeConf.Proxy).includes(group[i]) || // Ref from proxy section
+        reservedKeywords.includes(group[i]) || // Ref from reserved keywords
+        Object.keys(surgeConf['Proxy Group']).includes(group[i])) { // Ref from previous proxy group
         proxies.push(group[i]);
-      } else if (group[i].indexOf('=') !== -1) {
+      } else if (group[i].includes('=')) {
         const [key, val] = group[i].split(/\s*=\s*/);
         each[key] = val;
       }
@@ -146,10 +147,11 @@ function parseProxyGroup(surgeConf, option = {}) {
     each.proxies = proxies;
     proxyGroups.push(each);
   }
+
   return proxyGroups;
 }
 
 module.exports = {
   parseProxy,
-  parseProxyGroup,
-}
+  parseProxyGroup
+};
