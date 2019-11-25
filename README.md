@@ -1,23 +1,23 @@
 # surge2clash
-convert surge config to clash
+Convert Surge configuration to Clash format
 
-if you have any problem, welcome to post an issue
+If you encounter any problems, please feel free to raise an Issue. 
 
-# querystring option
+##  Query String Options
 
-| querystring option | description             |
-| ------------------ | ----------------------- |
-| url                | Surge configuration URL |
-| data               | Base64 encoded string   |
-| charSet            | Only applicable when passing configuration using `data` |
-| win                | For Windows GUI         |
+| param| description | required |
+| ---- | ---- | ---- |
+| url | Surge configuration URL | required if `data` not exist |
+| data | Base64 encoded string | required if `url` not exist |
+| charSet | Only applicable when passing configuration using `data` | no |
+| win | For Windows GUI | no |
+| extraRulesData | Base64 encoded rules which will append to **top** of origin `Rule` | no |
+| overrideRules | If existance, extra rule will replace the whole origin `Rule` section | no |
 
-
-Examples: 
+## Examples: 
 
 - `https://surge2clash.herokuapp.com/convert?url=https://yoursurge.conf/surge.conf&win=1`
 - `https://surge2clash.herokuapp.com/convert?data=aW5wdXQ%3D&chatSet=utf-8&win=1`
-
 
 Other options can also be changed using querystring such as `port`, `socks-port`, and `redir-port`.
 

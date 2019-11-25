@@ -57,7 +57,16 @@ function surge2Clash(surgeConfText, query) {
   clashConf.Proxy = proxys;
   clashConf['Proxy Group'] = proxyGroups;
 
-  clashConf.Rule = (surgeConf.Rule || []).map(i => {
+  const extraRules = [];
+  if (query.extraRulesData && query.extraRulesData.length > 0) {
+    const {extraRulesData: data, charSet = 'utf-8'} = query;
+    const buff = Buffer.from(data, 'base64');
+    buff.toString(charSet).split('\n').map(e => {
+      extraRules.push(e.trim());
+    });
+  }
+
+  clashConf.Rule = (extraRules.concat(!query.overrideRules ? (surgeConf.Rule || []) : [])).map(i => {
     // Remove unsupported keywords
     return i.replace(/no-resolve|,\s*no-resolve|,\s*force-remote-dns|force-remote-dns|dns-failed|,\s*dns-failed/, '');
   }).map(i => {
@@ -65,10 +74,7 @@ function surge2Clash(surgeConfText, query) {
     return i.replace(/\s*\/\/[^;)]*$/, '');
   }).filter(i => !i.startsWith('USER-AGENT') && !i.startsWith('PROCESS-NAME'));
 
-  delete query.win;
-  delete query.charSet;
-  delete query.data;
-  delete query.url;
+  const allowedQueryOverrides = ['port', 'socks-port', 'redir-port'];
 
   if (query.port) {
     query.port = parseInt(query.port, 10);
@@ -82,7 +88,12 @@ function surge2Clash(surgeConfText, query) {
     query['redir-port'] = parseInt(query['redir-port'], 10);
   }
 
-  const ret = Object.assign(clashConf, query);
+  const ret = Object.assign(clashConf, Object.keys(query)
+    .filter(key => allowedQueryOverrides.includes(key))
+    .reduce((obj, key) => {
+      obj[key] = query[key];
+      return obj;
+    }, {}));
   return (jsYaml.safeDump(ret));
 }
 
