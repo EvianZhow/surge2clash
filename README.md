@@ -7,14 +7,18 @@ if you have any problem, welcome to post an issue
 
 | querystring option | description             |
 | ------------------ | ----------------------- |
-| url                | surge configuration url |
-| win                | for windows GUI         |
-| port               | change http port        |
+| url                | Surge configuration URL |
+| data               | Base64 encoded string   |
+| charSet            | Only applicable when passing configuration using `data` |
+| win                | For Windows GUI         |
 
-demo: [https://surge2clash.herokuapp.com/](https://surge2clash.herokuapp.com/)
 
-example:`https://surge2clash.herokuapp.com/surge2clash?url=https://yoursurge.conf/surge.conf&win=1`
+Examples: 
 
-other option can also change using querystring such as socks-port
+- `https://surge2clash.herokuapp.com/convert?url=https://yoursurge.conf/surge.conf&win=1`
+- `https://surge2clash.herokuapp.com/convert?data=aW5wdXQ%3D&chatSet=utf-8&win=1`
+
+
+Other options can also be changed using querystring such as `port`, `socks-port`, and `redir-port`.
 
 

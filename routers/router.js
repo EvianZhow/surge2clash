@@ -6,6 +6,6 @@ router.get('/', async ctx => {
   ctx.body = 'hello';
 });
 
-router.get('/surge2clash', require('./surge2clash'));
+router.get('/convert', require('./surge2clash'));
 
 module.exports = router;

@@ -185,6 +185,8 @@ function surge2Clash(surgeConfText, query) {
   }).filter(i => !i.startsWith('USER-AGENT') && !i.startsWith('PROCESS-NAME'));
 
   delete query.win;
+  delete query.charSet;
+  delete query.data;
   delete query.url;
 
   if (query.port) {
