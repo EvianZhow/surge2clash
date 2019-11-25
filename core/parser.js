@@ -24,7 +24,7 @@ function parseHTTPProxyLine(name, confLine, option = {}) {
 
   if (params.length > i) {
     for (let {length} = params; i < length; i++) {
-      const [key, value] = params[i].split('=');
+      const [key, value] = params[i].split(/\s*=\s*/);
       // eslint-disable-next-line max-depth
       if (key === 'skip-cert-verify') {
         proxyConf['skip-cert-verify'] = value;
@@ -44,7 +44,7 @@ function parseSOCKSProxyLine(name, confLine, option = {}) {
     name,
     type: protocol,
     server: params[i++],
-    port: params[i++]
+    port: parseInt(params[i++], 10)
   };
   if (option.tls) {
     proxyConf.tls = true;
@@ -60,7 +60,7 @@ function parseSOCKSProxyLine(name, confLine, option = {}) {
 
   if (params.length > i) {
     for (let {length} = params; i < length; i++) {
-      const [key, value] = params[i].split('=');
+      const [key, value] = params[i].split(/\s*=\s*/);
       // eslint-disable-next-line max-depth
       if (key === 'skip-cert-verify') {
         proxyConf['skip-cert-verify'] = value;
@@ -75,7 +75,9 @@ function parseCustomProxyLine(name, confLine, option = {}) {
   let i = 1;
   const params = splitByCommas(confLine);
   const protocol = 'ss';
-  return {
+  // https://trello.com/c/BTr0vG1O/47-ss-libev-的支持情况
+  // 可选参数 obfs-host，用于自定义混淆请求的 Host 字段，默认为 cloudfront.net
+  const proxyConf = {
     name,
     type: protocol,
     server: params[i++],
@@ -83,6 +85,25 @@ function parseCustomProxyLine(name, confLine, option = {}) {
     cipher: params[i++],
     password: params[i++]
   };
+
+  i++; // Skip for module URL
+
+  if (params.length > i) {
+    proxyConf.plugin = 'obfs';
+    const pluginOpts = {host: 'cloudfront.net'};
+    for (let {length} = params; i < length; i++) {
+      const [key, val] = params[i].split(/\s*=\s*/);
+      if (key === 'obfs') {
+        pluginOpts.mode = val;
+      } else if (key === 'obfs-host') {
+        pluginOpts.host = val;
+      }
+    }
+
+    proxyConf['plugin-opts'] = pluginOpts;
+  }
+
+  return proxyConf;
 }
 
 function parseProxy(surgeConf, options = {}) {
@@ -155,5 +176,8 @@ function parseProxyGroup(surgeConf, option = {}) {
 
 module.exports = {
   parseProxy,
-  parseProxyGroup
+  parseProxyGroup,
+  parseHTTPProxyLine,
+  parseSOCKSProxyLine,
+  parseCustomProxyLine
 };
