@@ -8,7 +8,8 @@
   },
   "scripts": {
     "start": "node index.js",
-    "test": "xo"
+    "lint": "xo --fix",
+    "test": "ava"
   },
   "repository": {
     "type": "git",
@@ -38,6 +39,7 @@
     "space": true
   },
   "devDependencies": {
+    "ava": "^2.4.0",
     "xo": "^0.25.3"
   }
 }

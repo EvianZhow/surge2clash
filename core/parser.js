@@ -38,7 +38,7 @@ function parseHTTPProxyLine(name, confLine, option = {}) {
 function parseSOCKSProxyLine(name, confLine, option = {}) {
   let i = 1;
   const params = splitByCommas(confLine);
-  protocol = 'socks5';
+  const protocol = 'socks5';
 
   const proxyConf = {
     name,
@@ -104,6 +104,8 @@ function parseProxy(surgeConf, options = {}) {
         option.tls = true;
       case 'socks5':
         proxyConf = parseSOCKSProxyLine(k, e, option);
+        break;
+      default:
         break;
     }
 
