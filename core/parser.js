@@ -126,6 +126,11 @@ function parseProxyGroup(surgeConf, option = {}) {
       name,
       type: group[0]
     };
+
+    if (group[0] === 'url-test') {
+      each.interval = option.interval || 300;
+    }
+
     const proxies = [];
     for (let i = 1; i < group.length; i++) {
       if (Object.keys(surgeConf.Proxy).includes(group[i]) || // ref from proxy section
