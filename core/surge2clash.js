@@ -75,11 +75,11 @@ function surge2Clash(surgeConfText, query) {
   }
 
   if (query['socks-port']) {
-    query.port = parseInt(query['socks-port'], 10);
+    query['socks-port'] = parseInt(query['socks-port'], 10);
   }
 
   if (query['redir-port']) {
-    query.port = parseInt(query['redir-port'], 10);
+    query['redir-port'] = parseInt(query['redir-port'], 10);
   }
 
   const ret = Object.assign(clashConf, query);
