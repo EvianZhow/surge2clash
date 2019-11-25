@@ -12,7 +12,7 @@ If you encounter any problems, please feel free to raise an Issue.
 | charSet | Only applicable when passing configuration using `data` | no |
 | win | For Windows GUI | no |
 | extraRulesData | Base64 encoded rules which will append to **top** of origin `Rule` | no |
-| overrideRules | If existance, extra rule will replace the whole origin `Rule` section | no |
+| overrideRules | If exists, origin `Rule` section will be ignored | no |
 
 ## Examples: 
 
